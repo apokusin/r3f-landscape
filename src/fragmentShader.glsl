@@ -6,16 +6,16 @@ uniform sampler2D uTexture;
 // =====================
 // User controls (colors)
 // Adjust these constants to tweak terrain and lighting colors
-const vec3 TERRAIN_ALBEDO   = vec3(0.25, 0.25, 0.25);
-const vec3 AMBIENT_COLOR    = vec3(0.10, 0.11, 0.11);
+const vec3 TERRAIN_ALBEDO   = vec3(0.9, 0.9, 0.9);
+const vec3 AMBIENT_COLOR    = vec3(0.15, 0.15, 0.15);
 const vec3 DIFFUSE_COLOR    = vec3(0.0, 0.0, 0.0);
 
 const vec3 FOG_BASE_COLOR   = vec3(0.5, 0.5, 0.5);
 const vec3 FOG_SUN_COLOR    = vec3(0.10, 0.60, 0.45);
 
 // Scatter color tints near horizon
-const vec3 SCATTER_COLOR1   = vec3(0.0, 0.0, 0.0);
-const vec3 SCATTER_COLOR2   = vec3(0.0, 0.0, 0.0);
+const vec3 SCATTER_COLOR1   = vec3(0.50, 0.50, 0.50);
+const vec3 SCATTER_COLOR2   = vec3(0.50, 0.50, 0.50);
 const vec3 SCATTER_COLOR3   = vec3(0.50, 0.50, 0.50);
 
 // Light position affecting shading and fog highlight
