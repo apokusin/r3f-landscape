@@ -3,6 +3,25 @@ uniform float uTime;
 uniform vec2 uResolution;
 uniform sampler2D uTexture;
 
+// =====================
+// User controls (colors)
+// Adjust these constants to tweak terrain and lighting colors
+const vec3 TERRAIN_ALBEDO   = vec3(0.25, 0.25, 0.25);
+const vec3 AMBIENT_COLOR    = vec3(0.10, 0.11, 0.11);
+const vec3 DIFFUSE_COLOR    = vec3(0.0, 0.0, 0.0);
+
+const vec3 FOG_BASE_COLOR   = vec3(0.5, 0.5, 0.5);
+const vec3 FOG_SUN_COLOR    = vec3(0.10, 0.60, 0.45);
+
+// Scatter color tints near horizon
+const vec3 SCATTER_COLOR1   = vec3(0.0, 0.0, 0.0);
+const vec3 SCATTER_COLOR2   = vec3(0.0, 0.0, 0.0);
+const vec3 SCATTER_COLOR3   = vec3(0.50, 0.50, 0.50);
+
+// Light position affecting shading and fog highlight
+const vec3 LIGHT_POSITION   = vec3(-1.0, 0.0, 0.5);
+// =====================
+
 #define MAX_STEPS 100
 #define MAX_DIST 250.0
 #define SURFACE_DIST 0.001
@@ -71,19 +90,19 @@ float raymarch(vec3 ro, vec3 rd) {
   return dO;
 }
 
-vec3 lightPosition = vec3(-1.0, 0.0, 0.5);
+// using LIGHT_POSITION from the controls section
 
 // This fog is presented in Inigo Quilez's article
 // It's a version of the fog function that keeps the "fog" at the
 // bottom of the scene, and doesn't let it go above the horizon/mountains
 vec3 fog(vec3 ro,vec3 rd,vec3 col,float d){
   vec3 pos=ro+rd*d;
-  float sunAmount = max(dot(rd,lightPosition),0.0);
+  float sunAmount = max(dot(rd,LIGHT_POSITION),0.0);
   
   const float b=1.3;
   // Applying exponential decay to fog based on distance
   float fogAmount = .2*exp(-ro.y*b) * (1.-exp(-d*rd.y*b))/rd.y;
-  vec3 fogColor = mix(vec3(0.5,0.2,0.15), vec3(1.1,0.6,0.45), pow(sunAmount,2.0));
+  vec3 fogColor = mix(FOG_BASE_COLOR, FOG_SUN_COLOR, pow(sunAmount,2.0));
 
   return mix(col, fogColor, clamp(fogAmount,0.0,1.0));
 }
@@ -91,15 +110,15 @@ vec3 fog(vec3 ro,vec3 rd,vec3 col,float d){
 // This function comes from @stormoid's work and is used to add
 // a fake atmospherical scattering effect at the horizon line
 vec3 scatter(vec3 ro, vec3 rd) {
-  float sunAmount = max(dot(rd,lightPosition) * 0.5 + 0.5, 0.0);
+  float sunAmount = max(dot(rd,LIGHT_POSITION) * 0.5 + 0.5, 0.0);
   float depth = 1.0 - (ro + rd * (MAX_DIST)).y * 10.0;
   float hori = (linstep(-400.0 ,0.0 ,depth) - linstep(0.0, 400.0, depth)) * 1.04;
   hori *= pow(sunAmount, 0.04);
   
   vec3 col = vec3(0);
-  col += pow(hori, 100.0) * vec3(1.0 , 0.7, 0.5);
-  col += pow(hori, 25.0) * vec3(1.0, 0.5, 0.25) * 1.2;
-  col += pow(hori, 7.0) * vec3(1.0, 0.4, 0.25) * 1.8;
+  col += pow(hori, 100.0) * SCATTER_COLOR1;
+  col += pow(hori, 25.0) * SCATTER_COLOR2 * 1.2;
+  col += pow(hori, 7.0) * SCATTER_COLOR3 * 1.8;
   
   return col;
 }
@@ -144,12 +163,12 @@ void main() {
 
   if(d<MAX_DIST) {
     vec3 normal = getNormal(p);
-    vec3 lightDirection = normalize(lightPosition - p);
+    vec3 lightDirection = normalize(LIGHT_POSITION - p);
     
     float ambient = clamp(0.5 + .5*normal.y, 0.0, 1.0);
     float diffuse = max(dot(normal, lightDirection), 0.0);
     float shadows = softShadows(p, lightDirection, 0.1, 5.0, 64.0);
-    color=vec3(0.25,0.25,0.3) * (vec3(0.10,0.11,0.12) * ambient + 2.0 * vec3(0.9,0.4,0.25) * diffuse) * shadows;
+    color = TERRAIN_ALBEDO * (AMBIENT_COLOR * ambient + 2.0 * DIFFUSE_COLOR * diffuse) * shadows;
   }
 
   color = fog(ro, rd, color, d) + scatter(ro, rd);
